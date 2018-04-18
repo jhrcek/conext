@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 executable conext
   hs-source-dirs:      src
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
+  ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:       base,
                        tagsoup,
                        text,
@@ -24,4 +24,4 @@ executable conext
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/conext
+  location: https://github.com/jhrcek/conext

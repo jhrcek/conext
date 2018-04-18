@@ -18,7 +18,6 @@ import System.Exit (die)
 import Text.HTML.TagSoup (Tag, fromTagText, isTagText, parseTags, partitions)
 import Text.HTML.TagSoup.Match (tagOpenAttrLit)
 
-
 main :: IO ()
 main = do
     infile <- parseArgs
