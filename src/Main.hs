@@ -53,19 +53,18 @@ pluginAndArtifactBuildDurations =
 
 
 aftifactBuildDurations :: [PluginSummary] -> [(Text, DiffTime)]
-aftifactBuildDurations =
-    sortBy (flip (comparing snd))
-    . map (\ps -> (artifactId $ head ps , sum $ map duration ps))
-    . groupBy ((==)`on`artifactId)
-    . sortBy (comparing artifactId)
+aftifactBuildDurations = aggregateSummariesBy artifactId
 
 
 pluginBuildDurations :: [PluginSummary] -> [(Text, DiffTime)]
-pluginBuildDurations =
-    sortBy (flip (comparing snd))
-    . map (\ps -> (pluginName $ head ps , sum $ map duration ps))
-    . groupBy ((==)`on`pluginName)
-    . sortBy (comparing pluginName)
+pluginBuildDurations = aggregateSummariesBy pluginName
+
+
+aggregateSummariesBy :: (PluginSummary -> Text) -> [PluginSummary] -> [(Text, DiffTime)]
+aggregateSummariesBy field = sortBy (flip (comparing snd))
+    . map (\ps -> (field $ head ps , sum $ map duration ps))
+    . groupBy ((==)`on`field)
+    . sortBy (comparing field)
 
 
 process :: Text -> [PluginSummary]
