@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main (main) where
+
 import Data.Char (isSpace)
 import Data.Function (on)
 import Data.List (groupBy, sortBy)
@@ -10,8 +11,8 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Text.IO as T
 import Data.Time.Clock (DiffTime)
-import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Data.Time.LocalTime (timeOfDayToTime)
+import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
+import Data.Time.LocalTime (timeOfDayToTime, timeToTimeOfDay)
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
 import System.Exit (die)
@@ -23,27 +24,48 @@ main = do
     infile <- parseArgs
     input <- T.readFile infile
     let pluginSummaries = process input
-        slowestPluginsData = Text.unlines . ("artifact,plugin,duration":)
-                            . fmap (\ps -> Text.intercalate "," [artifactId ps, pluginName ps ,Text.pack (show $ (round :: DiffTime -> Integer) $ duration ps)])
-                            . takeWhile ((>10) . duration) . reverse
-                            $ sortBy (comparing duration) pluginSummaries
-    T.writeFile "slowest-plugins.csv" slowestPluginsData
+
+        artifact_plugin_durations = Text.unlines . ("artifact,plugin,duration":)
+                . fmap (\(art, plug, dur) -> Text.intercalate "," [art, plug, formatDuration "%M:%S" dur])
+                $ pluginAndArtifactBuildDurations pluginSummaries
+
+        artifact_durations = Text.unlines . ("artifact,duration":)
+                . fmap (\(art,  dur) -> Text.intercalate "," [art, formatDuration "%M:%S" dur])
+                $ aftifactBuildDurations pluginSummaries
+
+        plugin_durations = Text.unlines . ("plugin,duration":)
+                . fmap (\(plug,  dur) -> Text.intercalate "," [plug, formatDuration "%X" dur])
+                $ pluginBuildDurations pluginSummaries
+
+    T.writeFile "artifact_plugin_durations.csv" artifact_plugin_durations
+    T.writeFile "artifact_durations.csv" artifact_durations
+    T.writeFile "plugin_durations.csv" plugin_durations
+
+
+formatDuration :: String -> DiffTime -> Text
+formatDuration format d = Text.pack $ formatTime defaultTimeLocale format (timeToTimeOfDay d)
+
+
+pluginAndArtifactBuildDurations :: [PluginSummary] -> [(Text, Text, DiffTime)]
+pluginAndArtifactBuildDurations =
+    map (\ps -> (artifactId ps, pluginName ps, duration ps)) {-takeWhile ((>10) . duration)-}
+    . sortBy (flip (comparing duration))
 
 
 aftifactBuildDurations :: [PluginSummary] -> [(Text, DiffTime)]
 aftifactBuildDurations =
-  sortBy (comparing snd)
-  . map (\ps -> (artifactId $ head ps , sum $ map duration ps))
-  . groupBy ((==)`on`artifactId)
-  . sortBy (comparing artifactId)
+    sortBy (flip (comparing snd))
+    . map (\ps -> (artifactId $ head ps , sum $ map duration ps))
+    . groupBy ((==)`on`artifactId)
+    . sortBy (comparing artifactId)
 
 
 pluginBuildDurations :: [PluginSummary] -> [(Text, DiffTime)]
 pluginBuildDurations =
-  sortBy (comparing snd)
-  . map (\ps -> (pluginName $ head ps , sum $ map duration ps))
-  . groupBy ((==)`on`pluginName)
-  . sortBy (comparing pluginName)
+    sortBy (flip (comparing snd))
+    . map (\ps -> (pluginName $ head ps , sum $ map duration ps))
+    . groupBy ((==)`on`pluginName)
+    . sortBy (comparing pluginName)
 
 
 process :: Text -> [PluginSummary]
