@@ -2,7 +2,6 @@
 
 module Main (main) where
 
-import Data.Char (isSpace)
 import Data.Function (on)
 import Data.List (groupBy, sortBy)
 import Data.Monoid ((<>))
@@ -124,13 +123,9 @@ extractLogData = map scrapedLineToLogEntry . partitions isTimedLine . parseTags
 
 scrapedLineToLogEntry :: [Tag Text] -> LogEntry
 scrapedLineToLogEntry =
-  (\(timestamp:rest) -> LogEntry (parseTimestamp timestamp) (trim $ Text.concat rest))
+  (\(timestamp:rest) -> LogEntry (parseTimestamp timestamp) (Text.strip $ Text.concat rest))
   . map fromTagText
   . filter isTagText
-
-
-trim :: Text -> Text
-trim = Text.dropWhile isSpace . Text.dropWhileEnd isSpace
 
 
 parseTimestamp :: Text -> DiffTime
