@@ -1,22 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Main (main) where
 
-import Data.Function (on)
-import Data.List (groupBy, sortBy)
-import Data.Monoid ((<>))
-import Data.Ord (comparing)
-import Data.Text (Text)
-import qualified Data.Text as Text
-import Data.Text.IO as T
-import Data.Time.Clock (DiffTime)
-import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
-import Data.Time.LocalTime (timeOfDayToTime, timeToTimeOfDay)
-import System.Directory (doesFileExist)
-import System.Environment (getArgs)
-import System.Exit (die)
-import Text.HTML.TagSoup (Tag, fromTagText, isTagText, parseTags, partitions)
-import Text.HTML.TagSoup.Match (tagOpenAttrLit)
+import           Data.Function           (on)
+import           Data.List               (groupBy, sortBy)
+import           Data.Monoid             ((<>))
+import           Data.Ord                (comparing)
+import           Data.Text               (Text)
+import qualified Data.Text               as Text
+import           Data.Text.IO            as T
+import           Data.Time.Clock         (DiffTime)
+import           Data.Time.Format        (defaultTimeLocale, formatTime,
+                                          parseTimeM)
+import           Data.Time.LocalTime     (timeOfDayToTime, timeToTimeOfDay)
+import           System.Directory        (doesFileExist)
+import           System.Environment      (getArgs)
+import           System.Exit             (die)
+import           Text.HTML.TagSoup       (Tag, fromTagText, isTagText,
+                                          parseTags, partitions)
+import           Text.HTML.TagSoup.Match (tagOpenAttrLit)
 
 main :: IO ()
 main = do
@@ -90,23 +93,20 @@ data PluginSummary = PluginSummary
 
 
 entriesToSummary :: PluginEntries -> PluginSummary
-entriesToSummary entries = PluginSummary
-    { pluginName = pluginName'
-    , execution = execution'
-    , artifactId = artifactId'
-    , logText = Text.unlines $ map getPayload entries
-    , duration = end - start
-    }
+entriesToSummary entries = PluginSummary{..}
   where
     (LogEntry start txt) = head entries
     (LogEntry end _    ) = last entries
+    duration = end - start
     -- Break "[INFO] --- maven-resources-plugin:3.0.2:resources (default-resources) @ kjar-with-instrumentation" into
     -- into            ("maven-resources-plugin:3.0.2:resources", "(default-resources)", "kjar-with-instrumentation")
-    (pluginName', execution', artifactId') = case break (=="@") $ Text.words txt of
+    (pluginName, execution, artifactId) = case break (=="@") $ Text.words txt of
         (beforeAtSign, [_,art,_]) ->
             let [plugin, exec] = drop (length beforeAtSign - 2) beforeAtSign
             in (plugin, exec, art)
-        _ -> error . Text.unpack $ "unexpected format " <> txt
+        _ -> error . Text.unpack $ "entriesToSummary: unexpected format " <> txt
+
+    logText = Text.unlines $ map getPayload entries
 
 
 getPayload :: LogEntry -> Text
