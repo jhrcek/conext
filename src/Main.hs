@@ -70,7 +70,7 @@ aggregateSummariesBy field = sortBy (flip (comparing snd))
 
 
 process :: Text -> [PluginSummary]
-process = map entriesToSummary . partitionPlugins . extractLogData
+process = map entriesToSummary . partitionByPlugin . extractLogData
 
 
 isTimedLine :: Tag Text -> Bool
@@ -80,7 +80,7 @@ isTimedLine =  tagOpenAttrLit "span" ("class", "timestamp")
 data LogEntry = LogEntry DiffTime Text deriving Show
 
 
-type PluginEntries = [LogEntry]
+type LogEntries = [LogEntry]
 
 
 data PluginSummary = PluginSummary
@@ -92,7 +92,7 @@ data PluginSummary = PluginSummary
     } deriving Show
 
 
-entriesToSummary :: PluginEntries -> PluginSummary
+entriesToSummary :: LogEntries -> PluginSummary
 entriesToSummary entries = PluginSummary{..}
   where
     (LogEntry start txt) = head entries
@@ -113,8 +113,8 @@ getPayload :: LogEntry -> Text
 getPayload (LogEntry _ payload) = payload
 
 
-partitionPlugins :: [LogEntry] -> [PluginEntries]
-partitionPlugins = partitions (\(LogEntry _ txt)-> Text.isInfixOf "---" txt && Text.isInfixOf " @ " txt)
+partitionByPlugin :: LogEntries -> [LogEntries]
+partitionByPlugin = partitions (\(LogEntry _ txt)-> Text.isInfixOf "---" txt && Text.isInfixOf " @ " txt)
 
 
 extractLogData :: Text -> [LogEntry]
