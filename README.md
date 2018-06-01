@@ -14,7 +14,7 @@ After that you can build it using
 
 ```bash
 cd conext
-stack build
+stack build --pedantic --test
 ```
 
 ## Run it
@@ -26,7 +26,7 @@ wget https://kie-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/kieAllBuild-master-
 Run the tool
 
 ```bash
-stack exec conext -- consoleFull
+stack exec conext-exe -- consoleFull
 ```
 
 This will parse the log, extract data and produce output in 3 files in the current directory:

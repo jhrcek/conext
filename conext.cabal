@@ -11,17 +11,39 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-executable conext
-  hs-source-dirs:      src
-  main-is:             Main.hs
-  ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N -Wall
-  build-depends:       base,
-                       tagsoup,
-                       text,
-                       time,
-                       directory
-  default-language:    Haskell2010
+library
+  exposed-modules: Conext
+  hs-source-dirs: src
+  build-depends:
+    attoparsec,
+    base,
+    directory,
+    tagsoup,
+    text,
+    time
+  default-language: Haskell2010
+
+executable conext-exe
+  hs-source-dirs: app
+  main-is: Main.hs
+  ghc-options: -O2 -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+    base,
+    conext
+  default-language: Haskell2010
+
+test-suite conext-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs: test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base,
+    conext,
+    hspec,
+    text
+  default-language: Haskell2010
 
 source-repository head
-  type:     git
+  type: git
   location: https://github.com/jhrcek/conext
