@@ -3,13 +3,13 @@ import           Test.Hspec
 
 import           Conext            hiding (main)
 import           Control.Exception (evaluate)
-import           Data.Text.IO      as T
+import           Data.Text.IO      as Text
 
 main :: IO ()
 main = hspec $ do
   describe "Conext.parsePluginSummaries" $ do
     it "correctly parses piece of log" $ do
-      input <- T.readFile "test/pieceOf_consoleFull"
+      input <- Text.readFile "test/pieceOf_consoleFull"
       parsePluginSummaries input `shouldBe`
           [ PluginSummary {pluginInfo = PluginInfo {piName = "maven-clean-plugin", piVersion = "2.5", piGoal = "clean"}, execution = "default-clean", artifactId = "lienzo-core", duration = 0}
           , PluginSummary {pluginInfo = PluginInfo {piName = "maven-resources-plugin", piVersion = "2.6", piGoal = "resources"}, execution = "default-resources", artifactId = "lienzo-core", duration = 1}

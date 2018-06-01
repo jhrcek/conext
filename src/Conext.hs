@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
@@ -9,8 +10,10 @@ import           Data.Attoparsec.Text    (Parser, char, parseOnly, string,
                                           takeWhile)
 import           Data.Function           (on)
 import           Data.List               (groupBy, sortBy)
+import qualified Data.Map.Strict         as Map
 import           Data.Monoid             ((<>))
 import           Data.Ord                (comparing)
+import qualified Data.Set                as Set
 import           Data.Text               (Text)
 import qualified Data.Text               as Text
 import           Data.Text.IO            as T
@@ -32,9 +35,8 @@ main = do
     input <- T.readFile infile
     let pluginSummaries = parsePluginSummaries input
 
-
         artifact_plugin_durations = Text.unlines . ("artifact,plugin,duration":)
-                . fmap (\(art, plug, dur) -> Text.intercalate "," [art, plug, formatDuration "%M:%S" dur])
+                . fmap (\(art, plug, dur) -> Text.intercalate "," [art, pluginInfoToText plug, formatDuration "%M:%S" dur])
                 $ pluginAndArtifactBuildDurations pluginSummaries
 
         artifact_durations = Text.unlines . ("artifact,duration":)
@@ -44,14 +46,22 @@ main = do
         plugin_durations = Text.unlines . ("plugin,duration":)
                 . fmap (\(plug,  dur) -> Text.intercalate "," [plug, formatDuration "%X" dur])
                 $ pluginBuildDurations pluginSummaries
+
+        plugins_with_multiple_versions = pluginsWithMultipleVersions pluginSummaries
+
         output =
             [ ("artifact_plugin_durations.csv", artifact_plugin_durations)
             , ("artifact_durations.csv", artifact_durations)
             , ("plugin_durations.csv", plugin_durations)
             ]
+
     when (null pluginSummaries) $
         die $ "Failed to extract plugin duration info from " <> infile <>
               ". Was it really 'consoleFull' of a Jenkins job?"
+
+    when (not $ null plugins_with_multiple_versions) $ do
+        T.putStrLn "WARNING: Some plugins have multiple versions"
+        mapM_ print plugins_with_multiple_versions
 
     forM_ output $ \(filename, content) -> do
         T.writeFile filename content
@@ -61,9 +71,9 @@ formatDuration :: String -> DiffTime -> Text
 formatDuration format d =
     Text.pack $ formatTime defaultTimeLocale format (timeToTimeOfDay d)
 
-pluginAndArtifactBuildDurations :: [PluginSummary] -> [(Text, Text, DiffTime)]
+pluginAndArtifactBuildDurations :: [PluginSummary] -> [(Text, PluginInfo, DiffTime)]
 pluginAndArtifactBuildDurations =
-    map (\ps -> (artifactId ps, pluginInfoToText $ pluginInfo ps, duration ps)) {-takeWhile ((>10) . duration)-}
+    map (\ps -> (artifactId ps, pluginInfo ps, duration ps))
     . sortBy (flip (comparing duration))
 
 aftifactBuildDurations :: [PluginSummary] -> [(Text, DiffTime)]
@@ -73,6 +83,14 @@ aftifactBuildDurations =
 pluginBuildDurations :: [PluginSummary] -> [(Text, DiffTime)]
 pluginBuildDurations =
     map (first pluginInfoToText) . aggregateSummariesBy pluginInfo
+
+pluginsWithMultipleVersions :: [PluginSummary] -> [(Text, [Text])]
+pluginsWithMultipleVersions =
+    Map.toList
+    . fmap Set.toList
+    . Map.filter (\versions -> Set.size versions > 1)
+    . Map.fromListWith Set.union
+    . fmap (\PluginSummary{pluginInfo=PluginInfo{piName,piVersion}} -> (piName, Set.singleton piVersion))
 
 aggregateSummariesBy :: Ord a => (PluginSummary -> a) -> [PluginSummary] -> [(a, DiffTime)]
 aggregateSummariesBy field = sortBy (flip (comparing snd))
@@ -117,8 +135,9 @@ parsePluginLine pluginLine = either parseError id $ parseOnly pluginLineParser p
 pluginLineParser :: Parser (PluginInfo, Text, Text)
 pluginLineParser = (,,)
     <$> (string "[INFO] --- " *> pluginInfoParser)
-    <*> (string " (" *>  takeWhile (/=')') <* string ") @ ")
-    <*> (takeWhile (/=' ') <* string " ---")
+    <*> (string " ("          *> takeWhile (/=')'))
+    <*> (string ") @ "        *> takeWhile (/=' '))
+    <* string " ---"
 
 pluginInfoParser :: Parser PluginInfo
 pluginInfoParser = PluginInfo
