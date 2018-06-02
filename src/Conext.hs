@@ -60,8 +60,8 @@ main = do
               ". Was it really 'consoleFull' of a Jenkins job?"
 
     when (not $ null plugins_with_multiple_versions) $ do
-        T.putStrLn "WARNING: Some plugins have multiple versions"
-        mapM_ print plugins_with_multiple_versions
+        T.putStrLn "WARNING: multiple versions of some plugins used in the build process"
+        T.putStrLn . Text.unlines $ fmap (\(plug, versions) -> plug <> " [" <> Text.intercalate ", " versions <> "]") plugins_with_multiple_versions
 
     forM_ output $ \(filename, content) -> do
         T.writeFile filename content
