@@ -155,6 +155,10 @@ pluginInfoToText :: PluginInfo -> Text
 pluginInfoToText PluginInfo{..} =
     Text.intercalate ":" [piName, piVersion, piGoal]
 
+pluginSummaryToText :: PluginSummary -> Text
+pluginSummaryToText PluginSummary{..} =
+    Text.concat [pluginInfoToText pluginInfo, " (", execution, ") @ ", artifactId]
+
 partitionByPlugin :: LogEntries -> [LogEntries]
 partitionByPlugin =
     partitions (\(LogEntry _ txt)-> Text.isPrefixOf "[INFO] --- " txt && Text.isInfixOf " @ " txt)

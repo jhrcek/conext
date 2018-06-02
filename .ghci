@@ -1,0 +1,2 @@
+:set -XOverloadedStrings
+import qualified Data.Text.IO as T
