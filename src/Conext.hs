@@ -111,10 +111,11 @@ data LogEntry = LogEntry DiffTime Text deriving Show
 type LogEntries = [LogEntry]
 
 data PluginSummary = PluginSummary
-    { pluginInfo :: PluginInfo
-    , execution  :: Text
-    , artifactId :: Text
-    , duration   :: DiffTime
+    { pluginInfo :: !PluginInfo
+    , execution  :: !Text
+    , artifactId :: !Text
+    , duration   :: !DiffTime
+    , linesCount :: !Int
     } deriving (Eq, Show)
 
 entriesToSummary :: LogEntries -> PluginSummary
@@ -124,6 +125,7 @@ entriesToSummary entries = PluginSummary{..}
     (LogEntry end _    ) = last entries
     duration = end - start
     (pluginInfo, execution, artifactId) = parsePluginLine pluginLine
+    linesCount = length entries
 
 -- Break "[INFO] --- maven-resources-plugin:3.0.2:resources (default-resources) @ kjar-with-instrumentation" into
 -- into  (PluginInfo "maven-resources-plugin" "3.0.2" "resources", "default-resources", "kjar-with-instrumentation")
@@ -146,9 +148,9 @@ pluginInfoParser = PluginInfo
     <*> takeWhile (/=' ')
 
 data PluginInfo = PluginInfo
-    { piName    :: Text
-    , piVersion :: Text
-    , piGoal    :: Text
+    { piName    :: !Text
+    , piVersion :: !Text
+    , piGoal    :: !Text
     } deriving (Eq, Ord, Show)
 
 pluginInfoToText :: PluginInfo -> Text

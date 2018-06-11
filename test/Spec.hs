@@ -11,15 +11,15 @@ main = hspec $ do
     it "correctly parses piece of log" $ do
       input <- Text.readFile "test/pieceOf_consoleFull"
       parsePluginSummaries input `shouldBe`
-          [ PluginSummary {pluginInfo = PluginInfo {piName = "maven-clean-plugin", piVersion = "2.5", piGoal = "clean"}, execution = "default-clean", artifactId = "lienzo-core", duration = 0}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-resources-plugin", piVersion = "2.6", piGoal = "resources"}, execution = "default-resources", artifactId = "lienzo-core", duration = 1}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-compiler-plugin", piVersion = "3.2", piGoal = "compile"}, execution = "default-compile", artifactId = "lienzo-core", duration = 4}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-resources-plugin", piVersion = "2.6", piGoal = "testResources"}, execution = "default-testResources", artifactId = "lienzo-core", duration = 0}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-compiler-plugin", piVersion = "3.2", piGoal = "testCompile"}, execution = "default-testCompile", artifactId = "lienzo-core", duration = 0}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-surefire-plugin", piVersion = "2.12.4", piGoal = "test"}, execution = "default-test", artifactId = "lienzo-core", duration = 5}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-jar-plugin", piVersion = "2.5", piGoal = "jar"}, execution = "default-jar", artifactId = "lienzo-core", duration = 1}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-source-plugin", piVersion = "3.0.1", piGoal = "jar"}, execution = "attach-sources", artifactId = "lienzo-core", duration = 0}
-          , PluginSummary {pluginInfo = PluginInfo {piName = "maven-install-plugin", piVersion = "2.4", piGoal = "install"}, execution = "default-install", artifactId = "lienzo-core", duration = 0}
+          [ PluginSummary (PluginInfo "maven-clean-plugin" "2.5" "clean") "default-clean" "lienzo-core" 0 2
+          , PluginSummary (PluginInfo "maven-resources-plugin" "2.6" "resources") "default-resources" "lienzo-core" 1 5
+          , PluginSummary (PluginInfo "maven-compiler-plugin" "3.2" "compile") "default-compile" "lienzo-core" 4 8
+          , PluginSummary (PluginInfo "maven-resources-plugin" "2.6" "testResources") "default-testResources" "lienzo-core" 0 4
+          , PluginSummary (PluginInfo "maven-compiler-plugin" "3.2" "testCompile") "default-testCompile" "lienzo-core" 0 4
+          , PluginSummary (PluginInfo "maven-surefire-plugin" "2.12.4" "test") "default-test" "lienzo-core" 5 24
+          , PluginSummary (PluginInfo "maven-jar-plugin" "2.5" "jar") "default-jar" "lienzo-core" 1 7
+          , PluginSummary (PluginInfo "maven-source-plugin" "3.0.1" "jar") "attach-sources" "lienzo-core" 0 3
+          , PluginSummary (PluginInfo "maven-install-plugin" "2.4" "install") "default-install" "lienzo-core" 0 11
           ]
 
   describe "Conext.parsePluginLine" $ do
